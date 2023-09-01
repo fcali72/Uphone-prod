@@ -1,0 +1,31 @@
+name: Backup RDS PROD to S3
+on:
+   # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  # Permite que se ejecute automaticamente Cron
+  schedule:
+      - cron: '35 15 * * *'   
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1  # Cambiar a la región correcta
+
+      - name: Dump RDS database
+        run: |
+          timestamp=$(date +%Y%m%d%H%M%S)
+          filename=DBUPHONEPROD-$timestamp.sql.gz
+          TOKEN=$(aws rds generate-db-auth-token --hostname ${{ secrets.RDS_INSTANCE_ENDPOINT }} --port 3306 --region us-east-1 --user ${{ secrets.RDS_DB_USERNAME }})
+          mysqldump --host=${{ secrets.RDS_INSTANCE_ENDPOINT }} --port=3306 --user=${{ secrets.RDS_DB_USERNAME }} --password=${{ secrets.RDS_DB_PASSWORD }} ${{ secrets.RDS_DB_NAME }} | gzip > $filename
+          aws s3 cp $filename s3://respaldo-bdd/uphone-db/
