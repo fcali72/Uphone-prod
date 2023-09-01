@@ -1,4 +1,4 @@
-name: Backup RDS PROD to S3
+name: Backup RDS PROD-IDEN to S3
 on:
    # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
@@ -25,8 +25,8 @@ jobs:
       - name: Dump RDS database
         run: |
           timestamp=$(date +%Y%m%d%H%M%S)
-          filename=DBUPHONEPROD-$timestamp.sql
-          TOKEN=$(aws rds generate-db-auth-token --hostname uphone-db.cwhkndug0tzd.us-east-1.rds.amazonaws.com --port 3306 --region us-east-1 --user admin)
-          mysqldump --host=uphone-db.cwhkndug0tzd.us-east-1.rds.amazonaws.com --port=3306 --user=admin --password=$Uphone2023* uphone-db > $filename
-          aws s3 cp $filename s3://respaldo-bdd/uphone-db/
+          filename=DBUPHONEPRODID-$timestamp.sql
+          TOKEN=$(aws rds generate-db-auth-token --hostname uphone-identity-db-prod.cwhkndug0tzd.us-east-1.rds.amazonaws.com --port 3306 --region us-east-1 --user admin)
+          mysqldump --host=uphone-identity-db-prod.cwhkndug0tzd.us-east-1.rds.amazonaws.com --port=3306 --user=admin --password=$Uphone2023* identity-db > $filename
+          aws s3 cp $filename s3://respaldo-bdd/identity-db/
 
